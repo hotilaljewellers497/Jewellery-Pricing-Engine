@@ -1,383 +1,25 @@
-// import dotenv from "dotenv";
-// import express from "express";
-// import axios from "axios";
-// import cors from "cors";
-
-// dotenv.config();
-// const app = express();
-
-// app.use(cors());
-// app.use(express.json());
-// app.use(express.static("public"));
-
-// app.listen(process.env.PORT, () => {
-//   console.log(`Server running on port ${process.env.PORT}`);
-// });
-
-// app.post("/update-prices", async (req, res) => {
-//   try {
-//     const products = await fetchProducts();
-
-//     for (const productEdge of products.data.products.edges) {
-//       const product = productEdge.node;
-
-//       const metafields = product.metafields;
-
-//       const goldWeight = Number(
-//         metafields.find((m) => m.key === "gold_weight")?.value || 0,
-//       );
-
-//       const silverWeight = Number(
-//         metafields.find((m) => m.key === "silver_weight")?.value || 0,
-//       );
-
-//       const diamondCarat = Number(
-//         metafields.find((m) => m.key === "diamond_carat")?.value || 0,
-//       );
-
-//       const makingCharge = Number(
-//         metafields.find((m) => m.key === "making_charge")?.value || 0,
-//       );
-
-//       const goldRate = Number(req.body.goldRate || 0);
-//       const silverRate = Number(req.body.silverRate || 0);
-//       const diamondRate = Number(req.body.diamondRate || 0);
-
-//       const tags = product.tags;
-
-//       let rate = 0;
-
-//       if (tags.includes("gold")) {
-//         rate = goldRate;
-//       } else if (tags.includes("silver")) {
-//         rate = silverRate;
-//       } else if (tags.includes("diamond")) {
-//         rate = diamondRate;
-//       }
-
-//       const goldValue = goldWeight * goldRate;
-//       const silverValue = silverWeight * silverRate;
-//       const diamondValue = diamondCarat * diamondRate;
-
-//       const subtotal = goldValue + silverValue + diamondValue + makingCharge;
-
-//       const gst = subtotal * 0.03;
-
-//       const finalPrice = (subtotal + gst).toFixed(2);
-
-//       for (const variantEdge of product.variants.edges) {
-//         const variant = variantEdge.node;
-
-//         // const goldRate = Number(req.body.goldRate);
-
-//         // const newPrice = (parseFloat(variant.price) + goldRate * 5).toFixed(2);
-//         // const newPrice = (Number(variant.price) + rate * 5).toFixed(2);
-
-//         await updateVariantPrice(product.id, variant.id, finalPrice);
-
-//         console.log("Updated:", variant.id);
-//         console.log("Tags:", tags);
-//         console.log("Rate Used:", rate);
-//         console.log("Current Price:", variant.price);
-//         console.log("New Price:", newPrice);
-//         //  break;
-
-//         // console.log("Variant ID:", variant.id);
-//         // console.log("Current Price:", variant.price);
-//       }
-//     }
-//     // console.log(products);
-//     // console.log(JSON.stringify(products, null, 2));
-//     console.log("no of products", products.data.products.edges.length);
-
-//     res.json({ message: "Shopify connected successfully" });
-//   } catch (err) {
-//     console.error(err.response?.data || err.message);
-//     res.status(500).json({ message: "Shopify connection failed" });
-//   }
-// });
-
-// // const SHOPIFY_URL = `https://${process.env.SHOPIFY_STORE}/admin/api/2023-10/graphql.json`;
-// const SHOPIFY_URL = `https://${process.env.SHOPIFY_STORE}/admin/api/2024-04/graphql.json`;
-
-// async function fetchProducts() {
-//   const query = `
-// {
-//   products(first: 20) {
-//     edges {
-//       node {
-//         id
-//         title
-//         tags
-//         metafields(identifiers: [
-//           {namespace: "custom", key: "metal_type"},
-//           {namespace: "custom", key: "gold_weight"},
-//           {namespace: "custom", key: "silver_weight"},
-//           {namespace: "custom", key: "diamond_carat"},
-//           {namespace: "custom", key: "making_charge"}
-//         ]) {
-//           key
-//           value
-//         }
-//         variants(first: 20) {
-//           edges {
-//             node {
-//               id
-//               price
-//             }
-//           }
-//         }
-//       }
-//     }
-//   }
-// }
-// `;
-
-//   const response = await axios.post(
-//     SHOPIFY_URL,
-//     { query },
-//     {
-//       headers: {
-//         "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
-//         "Content-Type": "application/json",
-//       },
-//     },
-//   );
-
-//   return response.data;
-// }
-
-// async function updateVariantPrice(productId, variantId, price) {
-//   const mutation = `
-//   mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-//     productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-//       productVariants {
-//         id
-//         price
-//       }
-//       userErrors {
-//         field
-//         message
-//       }
-//     }
-//   }
-//   `;
-
-//   const variables = {
-//     productId: productId,
-//     variants: [
-//       {
-//         id: variantId,
-//         price: price.toString(),
-//       },
-//     ],
-//   };
-
-//   const response = await axios.post(
-//     SHOPIFY_URL,
-//     { query: mutation, variables },
-//     {
-//       headers: {
-//         "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
-//         "Content-Type": "application/json",
-//       },
-//     },
-//   );
-
-//   console.log(JSON.stringify(response.data, null, 2));
-// }
-
-//WORKING CODE FOR THE PRICE CALCULATION AND UPDATE WITHOUT USING TAGS
-// import dotenv from "dotenv";
-
-// import express from "express";
-// import axios from "axios";
-// import cors from "cors";
-
-// dotenv.config();
-
-// const app = express();
-
-// app.use(cors());
-// app.use(express.json());
-// app.use(express.static("public"));
-
-// const PORT = process.env.PORT || 3000;
-
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
-
-// const SHOPIFY_URL = `https://${process.env.SHOPIFY_STORE}/admin/api/2024-04/graphql.json`;
-
-// app.post("/update-prices", async (req, res) => {
-//   try {
-//     const goldRate = Number(req.body.goldRate || 0);
-//     const silverRate = Number(req.body.silverRate || 0);
-//     const diamondRate = Number(req.body.diamondRate || 0);
-
-//     console.log("goldrate",goldRate , "silverrate", silverRate , "diamondrate" , diamondRate);
-
-//     // const products = await fetchProducts();
-//     const response = await fetchProducts();
-
-//     console.log(response)
-
-//     if (!response.data || !response.data.products) {
-//       throw new Error("Invalid Shopify response");
-//     }
-
-//     const products = response.data.products.edges;
-
-//     // console.log(products)
-
-//     for (const productEdge of products) {
-//       const product = productEdge.node;
-
-//       const metafieldsMap = {};
-
-//       product.metafields.edges.forEach((edge) => {
-//         const m = edge.node;
-//         metafieldsMap[m.key] = Number(m.value || 0);
-//       });
-
-//       const goldWeight = metafieldsMap.gold_weight || 0;
-//       const silverWeight = metafieldsMap.silver_weight || 0;
-//       const diamondCarat = metafieldsMap.diamond_carat || 0;
-//       // const makingCharge = metafieldsMap.making_charge || 0;
-
-//       const goldValue = goldWeight * goldRate;
-//       const silverValue = silverWeight * silverRate;
-//       const diamondValue = diamondCarat * diamondRate;
-
-//       const subtotal = goldValue + silverValue + diamondValue;
-
-//       const makingCharge = subtotal * 0.15;  // Assuming making charge is 15% of the subtotal
-
-//       const total = subtotal + makingCharge;
-
-//       const gst = total * 0.03;
-
-//       const finalPrice = (total + gst).toFixed(2);
-
-//       console.log("final Price" , finalPrice);
-
-//       const variants = product.variants.edges.map((v) => ({
-//         id: v.node.id,
-//         price: finalPrice,
-//       }));
-
-//       await updateVariantPrice(product.id, variants);
-
-//       console.log(`Updated product: ${product.title}`);
-//     }
-
-//     // console.log("Products processed:", products.data.products.edges.length);
-//     console.log("Products processed:", products.length);
-
-//     res.json({ message: "Prices updated successfully" });
-//   } catch (err) {
-//     // console.error(err.response?.data || err.message);
-//     console.error(err || err.message);
-
-//     res.status(500).json({
-//       message: "Price update failed",
-//     });
-//   }
-// });
-
-// async function fetchProducts() {
-
-//   const query = `
-// {
-//   products(first: 50) {
-//     edges {
-//       node {
-//         id
-//         title
-//         tags
-
-//         metafields(first: 50, namespace: "custom") {
-//           edges {
-//             node {
-//               key
-//               value
-//             }
-//           }
-//         }
-
-//         variants(first: 50) {
-//           edges {
-//             node {
-//               id
-//               price
-//             }
-//           }
-//         }
-
-//       }
-//     }
-//   }
-// }
-// `;
-
-//   const response = await axios.post(
-//     SHOPIFY_URL,
-//     { query },
-//     {
-//       headers: {
-//         "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
-//         "Content-Type": "application/json",
-//       },
-//     },
-//   );
-
-//   // console.log(JSON.stringify(response.data, null, 2));
-
-//   return response.data;
-// }
-
-// async function updateVariantPrice(productId, variants) {
-//   const mutation = `
-//   mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-//     productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-//       productVariants {
-//         id
-//         price
-//       }
-//       userErrors {
-//         field
-//         message
-//       }
-//     }
-//   }
-//   `;
-
-//   const variables = {
-//     productId,
-//     variants,
-//   };
-
-//   const response = await axios.post(
-//     SHOPIFY_URL,
-//     { query: mutation, variables },
-//     {
-//       headers: {
-//         "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
-//         "Content-Type": "application/json",
-//       },
-//     },
-//   );
-
-//   if (response.data.data.productVariantsBulkUpdate.userErrors.length) {
-//     console.error(response.data.data.productVariantsBulkUpdate.userErrors);
-//   }
-// }
-
-// New code for saving breakdown in metafields along with price update
+// ============================================================
+// HOTILAL JEWELLERS — DYNAMIC PRICING ENGINE
+// ============================================================
+// This server connects to Shopify and updates product prices
+// based on live metal rates entered in the admin panel.
+//
+// PRICING FORMULA:
+//   Gold/Diamond Products:
+//     Final Price = (Metal Value + Making Charge + HUID + Cert Charge) + GST(3%)
+//
+//   Silver Jewellery:
+//     Final Price = Silver Value + HUID + GST(3%)  [no making charge]
+//
+//   Silver Bars & Coins (title contains "bar" or "coin"):
+//     Final Price = Silver Value (bullion rate) + HUID + GST(3%)  [no making charge]
+//
+// HUID NOTE:
+//   huid_charge = huid_rate × no_of_items
+//   If no_of_items = 0 → huid_charge = 0 (row hidden on website too)
+// ============================================================
 
 import dotenv from "dotenv";
-
 import express from "express";
 import axios from "axios";
 import cors from "cors";
@@ -385,263 +27,20 @@ import cors from "cors";
 dotenv.config();
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-const SHOPIFY_URL = `https://${process.env.SHOPIFY_STORE}/admin/api/2024-04/graphql.json`;
+const SHOPIFY_URL = `https://${process.env.SHOPIFY_STORE}/admin/api/2026-07/graphql.json`;
 
-// app.post("/update-prices", async (req, res) => {
-//   try {
-//     const goldRate = Number(req.body.goldRate || 0);
-//     const silverRate = Number(req.body.silverRate || 0);
-//     const diamondRate = Number(req.body.diamondRate || 0);
-
-//     console.log(
-//       "goldrate",
-//       goldRate,
-//       "silverrate",
-//       silverRate,
-//       "diamondrate",
-//       diamondRate,
-//     );
-
-//     // const products = await fetchProducts();
-//     const response = await fetchProducts();
-
-//     console.log(response);
-
-//     if (!response.data || !response.data.products) {
-//       throw new Error("Invalid Shopify response");
-//     }
-
-//     const products = response.data.products.edges;
-
-//     // console.log(products)
-
-//     // for (const productEdge of products) {
-//     //   const product = productEdge.node;
-
-//     //   const metafieldsMap = {};
-
-//     //   product.metafields.edges.forEach((edge) => {
-//     //     const m = edge.node;
-//     //     metafieldsMap[m.key] = Number(m.value || 0);
-//     //   });
-
-//     //   const goldWeight = metafieldsMap.gold_weight || 0;
-//     //   const silverWeight = metafieldsMap.silver_weight || 0;
-//     //   const diamondCarat = metafieldsMap.diamond_carat || 0;
-//     //   // const makingCharge = metafieldsMap.making_charge || 0;
-
-//     //   const goldValue = goldWeight * goldRate;
-//     //   const silverValue = silverWeight * silverRate;
-//     //   const diamondValue = diamondCarat * diamondRate;
-
-//     //   const subtotal = goldValue + silverValue + diamondValue;
-
-//     //   const makingCharge = subtotal * 0.15;  // Assuming making charge is 15% of the subtotal
-
-//     //   const total = subtotal + makingCharge;
-
-//     //   const gst = total * 0.03;
-
-//     //   const finalPrice = (total + gst).toFixed(2);
-
-//     //   console.log("final Price" , finalPrice);
-
-//     //   const variants = product.variants.edges.map((v) => ({
-//     //     id: v.node.id,
-//     //     price: finalPrice,
-//     //   }));
-
-//     //   await updateVariantPrice(product.id, variants);
-
-//     //   console.log(`Updated product: ${product.title}`);
-//     // }
-
-//     for (const productEdge of products) {
-//       const product = productEdge.node;
-
-//       const metafieldsMap = {};
-//       product.metafields.edges.forEach((edge) => {
-//         const m = edge.node;
-//         metafieldsMap[m.key] = Number(m.value || 0);
-//       });
-
-//       const goldWeight = metafieldsMap.gold_weight || 0;
-//       const silverWeight = metafieldsMap.silver_weight || 0;
-//       const diamondCarat = metafieldsMap.diamond_carat || 0;
-
-//       const goldValue = goldWeight * goldRate;
-//       const silverValue = silverWeight * silverRate;
-//       const diamondValue = diamondCarat * diamondRate;
-
-//       const subtotal = goldValue + silverValue + diamondValue;
-//       const makingCharge = subtotal * 0.15;
-//       const total = subtotal + makingCharge;
-//       const gst = total * 0.03;
-//       const finalPrice = (total + gst).toFixed(2);
-
-//       const variants = product.variants.edges.map((v) => ({
-//         id: v.node.id,
-//         price: finalPrice,
-//       }));
-
-//       await updateVariantPrice(product.id, variants);
-
-//       // ✅ NEW: Save breakdown into metafields
-//       await saveBreakdownMetafields(product.id, {
-//         gold_value: goldValue.toFixed(2),
-//         silver_value: silverValue.toFixed(2),
-//         diamond_value: diamondValue.toFixed(2),
-//         making_charge: makingCharge.toFixed(2),
-//         subtotal: subtotal.toFixed(2),
-//         gst: gst.toFixed(2),
-//         final_price: finalPrice,
-//         gold_rate: goldRate.toFixed(2),
-//         silver_rate: silverRate.toFixed(2),
-//         diamond_rate: diamondRate.toFixed(2),
-//       });
-
-//       console.log(`Updated product: ${product.title}`);
-//     }
-
-//     // console.log("Products processed:", products.data.products.edges.length);
-//     console.log("Products processed:", products.length);
-
-//     res.json({ message: "Prices updated successfully" });
-//   } catch (err) {
-//     // console.error(err.response?.data || err.message);
-//     console.error(err || err.message);
-
-//     res.status(500).json({
-//       message: "Price update failed",
-//     });
-//   }
-// });
-
-// async function fetchProducts() {
-//   const query = `
-// {
-//   products(first: 50) {
-//     edges {
-//       node {
-//         id
-//         title
-//         tags
-
-//         metafields(first: 50, namespace: "custom") {
-//           edges {
-//             node {
-//               key
-//               value
-//             }
-//           }
-//         }
-
-//         variants(first: 50) {
-//           edges {
-//             node {
-//               id
-//               price
-//             }
-//           }
-//         }
-
-//       }
-//     }
-//   }
-// }
-// `;
-
-//   const response = await axios.post(
-//     SHOPIFY_URL,
-//     { query },
-//     {
-//       headers: {
-//         "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
-//         "Content-Type": "application/json",
-//       },
-//     },
-//   );
-
-//   // console.log(JSON.stringify(response.data, null, 2));
-
-//   return response.data;
-// }
-
-// app.post("/update-prices", async (req, res) => {
-//   const goldRate = Number(req.body.goldRate || 0);
-//   const silverRate = Number(req.body.silverRate || 0);
-//   // const diamondRate = Number(req.body.diamondRate || 0);
-//   const igiDiamondRate = Number(req.body.igiDiamondRate || 0);
-//   const giaDiamondRate = Number(req.body.giaDiamondRate || 0);
-//   const hrdDiamondRate = Number(req.body.hrdDiamondRate || 0);
-//   const huid = Number(req.body.huid || 0); // ✅ Add this line
-
-//   // ✅ Respond immediately — don't make user wait
-//   res.json({ message: "Price update started! Check progress below." });
-
-//   // ✅ Run update in background
-//   // runPriceUpdate(goldRate, silverRate, diamondRate, huid);
-//   runPriceUpdate(
-//     goldRate,
-//     silverRate,
-//     igiDiamondRate,
-//     giaDiamondRate,
-//     hrdDiamondRate,
-//     huid,
-//   );
-// });
-
-app.post("/update-prices", async (req, res) => {
-  const goldRate22K = Number(req.body.goldRate22K || 0);
-  const goldRate18K = Number(req.body.goldRate18K || 0);
-  const goldRate14K = Number(req.body.goldRate14K || 0);
-  const silverRate = Number(req.body.silverRate || 0);
-  const igiDiamondRate = Number(req.body.igiDiamondRate || 0);
-  const giaDiamondRate = Number(req.body.giaDiamondRate || 0);
-  const hrdDiamondRate = Number(req.body.hrdDiamondRate || 0);
-  const huid = Number(req.body.huid || 0);
-  const diamondCertCharge = Number(req.body.diamondCertCharge || 0); // ✅ NEW
-
-  console.log("Rates received:", {
-    goldRate22K,
-    goldRate18K,
-    goldRate14K,
-    silverRate,
-    igiDiamondRate,
-    giaDiamondRate,
-    hrdDiamondRate,
-    huid,
-  });
-
-  // ✅ Respond immediately
-  res.json({ message: "Price update started! Tracking progress below." });
-
-  // ✅ Run in background
-  runPriceUpdate(
-    goldRate22K,
-    goldRate18K,
-    goldRate14K,
-    silverRate,
-    igiDiamondRate,
-    giaDiamondRate,
-    hrdDiamondRate,
-    huid,
-    diamondCertCharge,
-  );
-});
-
-// Track progress globally
+// ============================================================
+// PROGRESS TRACKER — used by frontend polling
+// ============================================================
 let updateProgress = {
   running: false,
   total: 0,
@@ -650,128 +49,80 @@ let updateProgress = {
   message: "",
 };
 
-// async function runPriceUpdate(goldRate, silverRate, diamondRate, huid) {
-// async function runPriceUpdate(
-//   goldRate,
-//   silverRate,
-//   igiDiamondRate,
-//   giaDiamondRate,
-//   hrdDiamondRate,
-//   huid,
-// ) {
-//   updateProgress = {
-//     running: true,
-//     total: 0,
-//     done: 0,
-//     status: "running",
-//     message: "Fetching products...",
-//   };
+// ============================================================
+// ROUTE: POST /update-prices
+// Receives rates from the admin panel form and starts
+// the background price update job immediately.
+// Returns instantly so the UI doesn't freeze.
+// ============================================================
+app.post("/update-prices", async (req, res) => {
+  // --- Gold Rates (per gram) ---
+  const goldRate22K = Number(req.body.goldRate22K || 0);
+  const goldRate18K = Number(req.body.goldRate18K || 0);
+  const goldRate14K = Number(req.body.goldRate14K || 0);
 
-//   try {
-//     const products = await fetchAllProducts();
-//     updateProgress.total = products.length;
-//     updateProgress.message = `Updating ${products.length} products...`;
+  // --- Silver Rates (per gram) ---
+  const silverRate = Number(req.body.silverRate || 0); // for jewellery
+  const silverBullionRate = Number(req.body.silverBullionRate || 0); // for bars & coins
 
-//     await processBatch(products, 5, async (productEdge) => {
-//       const product = productEdge.node;
+  // --- Diamond Rates (per carat) ---
+  const igiDiamondRate = Number(req.body.igiDiamondRate || 0); // IJSI grade
+  const giaDiamondRate = Number(req.body.giaDiamondRate || 0); // HIVS-SI grade
+  const hrdDiamondRate = Number(req.body.hrdDiamondRate || 0); // GHVVS-VS grade
 
-//       // const metafieldsMap = {};
-//       // product.metafields.edges.forEach((edge) => {
-//       //   const m = edge.node;
-//       //   metafieldsMap[m.key] = Number(m.value || 0);
-//       // });
+  // --- Other Charges ---
+  const huid = Number(req.body.huid || 0); // flat per piece
+  const diamondCertCharge = Number(req.body.diamondCertCharge || 0); // flat per diamond product
 
-//       const metafieldsMap = {};
-//       const metafieldsMapRaw = {}; // ✅ Keep raw string values too
-//       product.metafields.edges.forEach((edge) => {
-//         const m = edge.node;
-//         metafieldsMap[m.key] = Number(m.value || 0);
-//         metafieldsMapRaw[m.key] = m.value || ""; // ✅ Raw string
-//       });
+  console.log("📥 Rates received:", {
+    goldRate22K,
+    goldRate18K,
+    goldRate14K,
+    silverRate,
+    silverBullionRate,
+    igiDiamondRate,
+    giaDiamondRate,
+    hrdDiamondRate,
+    huid,
+    diamondCertCharge,
+  });
 
-//       const goldWeight = metafieldsMap.gold_weight || 0;
-//       const silverWeight = metafieldsMap.silver_weight || 0;
-//       const diamondCarat = metafieldsMap.diamond_carat || 0;
-//       const diamondType = metafieldsMapRaw.diamond_type || ""; // ✅ Read from raw
+  // ✅ Respond immediately — background job handles the rest
+  res.json({ message: "Price update started! Tracking progress below." });
 
-//       // ✅ Pick the correct diamond rate based on type
-//       let diamondRate = 0;
-//       if (diamondType.toUpperCase() === "IGI") {
-//         diamondRate = igiDiamondRate;
-//       } else if (diamondType.toUpperCase() === "GIA") {
-//         diamondRate = giaDiamondRate;
-//       } else if (diamondType.toUpperCase() === "HRD") {
-//         diamondRate = hrdDiamondRate;
-//       }
+  // 🔄 Start background update
+  runPriceUpdate(
+    goldRate22K,
+    goldRate18K,
+    goldRate14K,
+    silverRate,
+    silverBullionRate,
+    igiDiamondRate,
+    giaDiamondRate,
+    hrdDiamondRate,
+    huid,
+    diamondCertCharge,
+  );
+});
 
-//       const goldValue = goldWeight * goldRate;
-//       const silverValue = silverWeight * silverRate;
-//       const diamondValue = diamondCarat * diamondRate;
+// ============================================================
+// ROUTE: GET /update-progress
+// Frontend polls this every 1 second to show the progress bar
+// ============================================================
+app.get("/update-progress", (req, res) => {
+  res.json(updateProgress);
+});
 
-//       // ✅ HUID is a fixed flat amount added to the price, not a percentage
-//       const huidCharge = huid;
-
-//       const subtotal = goldValue + silverValue + diamondValue + huidCharge; // ✅ Add huidCharge to subtotal
-//       const makingCharge = subtotal * 0.15;
-
-//       const total = subtotal + makingCharge;
-//       const gst = total * 0.03;
-//       const finalPrice = (total + gst).toFixed(2);
-
-//       const variants = product.variants.edges.map((v) => ({
-//         id: v.node.id,
-//         price: finalPrice,
-//       }));
-
-//       await updateVariantPrice(product.id, variants);
-
-//       await saveBreakdownMetafields(product.id, {
-//         gold_value: goldValue.toFixed(2),
-//         silver_value: silverValue.toFixed(2),
-//         diamond_value: diamondValue.toFixed(2),
-//         making_charge: makingCharge.toFixed(2),
-//         huid: huidCharge.toFixed(2), // ✅ Add this
-//         subtotal: (subtotal + makingCharge).toFixed(2),
-//         gst: gst.toFixed(2),
-//         final_price: finalPrice,
-//         gold_rate: goldRate.toFixed(2),
-//         silver_rate: silverRate.toFixed(2),
-//         // diamond_rate: diamondRate.toFixed(2),
-//         diamond_rate: diamondRate.toFixed(2), // ✅ Saves the actual rate used for this product
-//         diamond_type: diamondType,
-//       });
-
-//       // ✅ Update progress
-//       updateProgress.done++;
-//       console.log(
-//         `✅ ${updateProgress.done}/${updateProgress.total} - ${product.title}`,
-//       );
-//     });
-
-//     updateProgress = {
-//       running: false,
-//       total: updateProgress.total,
-//       done: updateProgress.total,
-//       status: "done",
-//       message: `✅ All ${updateProgress.total} products updated!`,
-//     };
-//   } catch (err) {
-//     updateProgress = {
-//       running: false,
-//       total: 0,
-//       done: 0,
-//       status: "error",
-//       message: "❌ Update failed: " + err.message,
-//     };
-//     console.error(err.message);
-//   }
-// }
-
+// ============================================================
+// BACKGROUND JOB: runPriceUpdate
+// Fetches all products and updates prices in batches of 5
+// ============================================================
 async function runPriceUpdate(
   goldRate22K,
   goldRate18K,
   goldRate14K,
   silverRate,
+  silverBullionRate,
   igiDiamondRate,
   giaDiamondRate,
   hrdDiamondRate,
@@ -787,82 +138,144 @@ async function runPriceUpdate(
   };
 
   try {
+    // Fetch all products using pagination (handles 1000+ products)
     const products = await fetchAllProducts();
     updateProgress.total = products.length;
     updateProgress.message = `Updating ${products.length} products...`;
 
+    // Process in batches of 5 to respect Shopify rate limits
     await processBatch(products, 5, async (productEdge) => {
       const product = productEdge.node;
 
+      // ----------------------------------------------------------
+      // STEP 1: Read metafields for this product
+      // ----------------------------------------------------------
       const metafieldsMap = {};
       product.metafields.edges.forEach((edge) => {
         const m = edge.node;
-        metafieldsMap[m.key] = m.value;
+        metafieldsMap[m.key] = m.value; // keep as string (we parse below)
       });
 
-      const noOfItems = Number(metafieldsMap.no_of_items || 1); // ✅ default 1 if not set
-
-      // ✅ Read weights as numbers
       const goldWeight = Number(metafieldsMap.gold_weight || 0);
       const silverWeight = Number(metafieldsMap.silver_weight || 0);
       const diamondCarat = Number(metafieldsMap.diamond_carat || 0);
 
-      // ✅ Read gold karat type from metafield (default 22K)
+      // no_of_items drives HUID calculation
+      // If 0 → HUID becomes 0 and row is hidden on website
+      const noOfItems = Number(metafieldsMap.no_of_items || 0);
+
+      const productTitle = product.title.toLowerCase();
+
+      // ----------------------------------------------------------
+      // STEP 2: Detect product type
+      // ----------------------------------------------------------
+
+      // Silver bar or coin: has silver weight, no gold, and title has "bar" or "coin"
+      const isSilverBullion =
+        silverWeight > 0 &&
+        goldWeight === 0 &&
+        (productTitle.includes("bar") || productTitle.includes("coin"));
+
+      // Pure silver jewellery: has silver weight, no gold, not a bullion product
+      const isSilverOnly =
+        silverWeight > 0 && goldWeight === 0 && !isSilverBullion;
+
+      // ----------------------------------------------------------
+      // STEP 3: Pick correct silver rate
+      // ----------------------------------------------------------
+      const activeSilverRate = isSilverBullion ? silverBullionRate : silverRate;
+
+      // ----------------------------------------------------------
+      // STEP 4: Pick correct gold rate + making charge % by karat
+      // ----------------------------------------------------------
       const metalType = (metafieldsMap.metal_type || "22K")
         .toString()
         .trim()
         .toUpperCase();
 
-      // ✅ Pick correct gold rate based on karat
-      let goldRate = goldRate22K; // default
-      let makingChargePercent = 0.15; // default 22K
+      let goldRate = goldRate22K;
+      let makingChargePercent = 0.15; // 22K default
 
       if (metalType.includes("18")) {
         goldRate = goldRate18K;
-        makingChargePercent = 0.15; // 18K making charge
+        makingChargePercent = 0.18;
       } else if (metalType.includes("14")) {
         goldRate = goldRate14K;
-        makingChargePercent = 0.15; // 14K making charge
-      } else {
-        goldRate = goldRate22K;
-        makingChargePercent = 0.15; // 22K making charge
+        makingChargePercent = 0.2;
       }
 
-      // ✅ Pick correct diamond rate based on diamond_type metafield
+      // ----------------------------------------------------------
+      // STEP 5: Pick correct diamond rate by certification type
+      // ----------------------------------------------------------
       const diamondType = (metafieldsMap.diamond_type || "")
         .toString()
         .trim()
         .toUpperCase();
-      let diamondRate = igiDiamondRate; // default IGI
-      if (diamondType.includes("GIA")) {
+
+      let diamondRate = igiDiamondRate; // default: IGI / IJSI
+
+      if (diamondType.includes("GIA") || diamondType.includes("HIVS")) {
         diamondRate = giaDiamondRate;
-      } else if (diamondType.includes("HRD")) {
+      } else if (diamondType.includes("HRD") || diamondType.includes("GHVVS")) {
         diamondRate = hrdDiamondRate;
       }
 
-      // ✅ Price calculation
+      // ----------------------------------------------------------
+      // STEP 6: Calculate metal values
+      // ----------------------------------------------------------
       const goldValue = goldWeight * goldRate;
-      const silverValue = silverWeight * silverRate;
+      const silverValue = silverWeight * activeSilverRate;
       const diamondValue = diamondCarat * diamondRate;
 
       const metalSubtotal = goldValue + silverValue + diamondValue;
-      const makingCharge = metalSubtotal * makingChargePercent;
-      // const makingCharge = goldValue * makingChargePercent; // ✅ Making charge is only on gold value, not on silver/diamond
-      let huidCharge = huid * noOfItems;
-      // const huidCharge     = huid;
 
-      // ✅ NEW: If product has diamond, add certificate charge to HUID
-      // let huidCharge = huid;
-      if (diamondCarat > 0 && diamondRate > 0) {
-        huidCharge = huidCharge + diamondCertCharge; // Regular HUID + Diamond Certificate
-      }
+      // ----------------------------------------------------------
+      // STEP 7: Making charge
+      //   - Gold products: makingChargePercent of metalSubtotal
+      //   - Silver jewellery: NO making charge
+      //   - Silver bars/coins: NO making charge
+      // ----------------------------------------------------------
+      const makingCharge =
+        isSilverOnly || isSilverBullion
+          ? 0
+          : metalSubtotal * makingChargePercent;
 
-      const subtotal = metalSubtotal + makingCharge + huidCharge;
+      // Save 0 for silver so the UI row is hidden automatically
+      const makingChargePercentSaved =
+        isSilverOnly || isSilverBullion ? 0 : makingChargePercent * 100;
 
-      // const gst = subtotal * 0.03;
-      const gst = (subtotal - huidCharge) * 0.03;
+      // ----------------------------------------------------------
+      // STEP 8: HUID charge
+      //   huid_charge = huid_rate × no_of_items
+      //   If no_of_items = 0 → huid_charge = 0
+      //   (Website hides the HUID row when this value = 0)
+      // ----------------------------------------------------------
+      const huidCharge = huid * noOfItems; // 0 × anything = 0 when noOfItems = 0
+
+      // ----------------------------------------------------------
+      // STEP 9: Diamond certificate charge
+      //   Added only when the product has a diamond
+      // ----------------------------------------------------------
+      const certCharge =
+        diamondCarat > 0 && diamondRate > 0 ? diamondCertCharge : 0;
+
+      // Total HUID + cert (saved together as one line in breakdown)
+      const totalHuidAndCert = huidCharge + certCharge;
+
+      // ----------------------------------------------------------
+      // STEP 10: Final price calculation
+      //   Subtotal = metals + making + huid + cert
+      //   GST (3%) applied on subtotal excluding HUID/cert charges
+      //   Final Price = subtotal + GST
+      // ----------------------------------------------------------
+      const subtotal = metalSubtotal + makingCharge + totalHuidAndCert;
+      const gstBase = metalSubtotal + makingCharge; // GST not on HUID/cert
+      const gst = gstBase * 0.03;
       const finalPrice = (subtotal + gst).toFixed(2);
 
+      // ----------------------------------------------------------
+      // STEP 11: Update Shopify variant price
+      // ----------------------------------------------------------
       const variants = product.variants.edges.map((v) => ({
         id: v.node.id,
         price: finalPrice,
@@ -870,24 +283,33 @@ async function runPriceUpdate(
 
       await updateVariantPrice(product.id, variants);
 
+      // ----------------------------------------------------------
+      // STEP 12: Save full breakdown into product metafields
+      //   These are read by price-breakdown.liquid on the website
+      // ----------------------------------------------------------
       await saveBreakdownMetafields(product.id, {
         gold_value: goldValue.toFixed(2),
         silver_value: silverValue.toFixed(2),
         diamond_value: diamondValue.toFixed(2),
         making_charge: makingCharge.toFixed(2),
-        making_charge_percent: (makingChargePercent * 100).toFixed(0), // ✅ Add this
-        huid: huidCharge.toFixed(2),
+        making_charge_percent: makingChargePercentSaved.toFixed(0),
+        huid: totalHuidAndCert.toFixed(2), // combined HUID + cert
         subtotal: subtotal.toFixed(2),
         gst: gst.toFixed(2),
         final_price: finalPrice,
         gold_rate: goldRate.toFixed(2),
-        silver_rate: silverRate.toFixed(2),
+        silver_rate: activeSilverRate.toFixed(2), // saves actual rate used
         diamond_rate: diamondRate.toFixed(2),
       });
 
+      // Update progress tracker
       updateProgress.done++;
       console.log(
-        `✅ ${updateProgress.done}/${updateProgress.total} - ${product.title} [${metalType}] [${diamondType || "No Diamond"}]`,
+        `✅ ${updateProgress.done}/${updateProgress.total} — ${product.title}` +
+          ` [${metalType}]` +
+          ` [${isSilverBullion ? "BULLION" : isSilverOnly ? "SILVER" : "GOLD"}]` +
+          ` [${diamondType || "No Diamond"}]` +
+          ` → ₹${finalPrice}`,
       );
     });
 
@@ -906,15 +328,18 @@ async function runPriceUpdate(
       status: "error",
       message: "❌ Update failed: " + err.message,
     };
-    console.error(err.message);
+
+    console.error("❌ Error:", err.message);
+    console.error("Status:", err.response?.status);
+    console.error("Shopify response:", err.response?.data);
   }
 }
 
-// ✅ Progress endpoint — frontend polls this
-app.get("/update-progress", (req, res) => {
-  res.json(updateProgress);
-});
-
+// ============================================================
+// HELPER: fetchAllProducts
+// Fetches all products using Shopify pagination (cursor-based)
+// Handles stores with 1000+ products without missing any
+// ============================================================
 async function fetchAllProducts() {
   let allProducts = [];
   let hasNextPage = true;
@@ -971,41 +396,41 @@ async function fetchAllProducts() {
     allProducts = [...allProducts, ...edges];
     hasNextPage = data.pageInfo.hasNextPage;
 
-    // Get cursor of last item for next page
     if (hasNextPage && edges.length > 0) {
       cursor = edges[edges.length - 1].cursor;
     }
 
-    console.log(`Fetched ${allProducts.length} products so far...`);
+    console.log(`📦 Fetched ${allProducts.length} products so far...`);
 
-    // Small delay between page fetches
+    // Small delay between pages to avoid rate limiting
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
 
-  console.log(`Total products fetched: ${allProducts.length}`);
+  console.log(`📦 Total products fetched: ${allProducts.length}`);
   return allProducts;
 }
 
+// ============================================================
+// HELPER: updateVariantPrice
+// Updates all variants of a product with the new final price
+// ============================================================
 async function updateVariantPrice(productId, variants) {
   const mutation = `
-  mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-    productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-      productVariants {
-        id
-        price
-      }
-      userErrors {
-        field
-        message
+    mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+        productVariants {
+          id
+          price
+        }
+        userErrors {
+          field
+          message
+        }
       }
     }
-  }
   `;
 
-  const variables = {
-    productId,
-    variants,
-  };
+  const variables = { productId, variants };
 
   const response = await axios.post(
     SHOPIFY_URL,
@@ -1019,11 +444,18 @@ async function updateVariantPrice(productId, variants) {
   );
 
   if (response.data.data.productVariantsBulkUpdate.userErrors.length) {
-    console.error(response.data.data.productVariantsBulkUpdate.userErrors);
+    console.error(
+      "⚠️ Variant update errors:",
+      response.data.data.productVariantsBulkUpdate.userErrors,
+    );
   }
 }
 
-// ✅ NEW: Function to save breakdown into metafields
+// ============================================================
+// HELPER: saveBreakdownMetafields
+// Saves the full price breakdown into product metafields
+// These are read by price-breakdown.liquid on the product page
+// ============================================================
 async function saveBreakdownMetafields(productId, breakdown) {
   const mutation = `
     mutation UpdateProductMetafields($input: ProductInput!) {
@@ -1043,15 +475,11 @@ async function saveBreakdownMetafields(productId, breakdown) {
     namespace: "custom",
     key: key,
     value: String(value),
-    // type: "number_decimal",
-    type: key === "diamond_type" ? "single_line_text_field" : "number_decimal", // ✅ Handle string
+    type: key === "diamond_type" ? "single_line_text_field" : "number_decimal",
   }));
 
   const variables = {
-    input: {
-      id: productId,
-      metafields,
-    },
+    input: { id: productId, metafields },
   };
 
   const response = await axios.post(
@@ -1067,21 +495,29 @@ async function saveBreakdownMetafields(productId, breakdown) {
 
   if (response.data.data.productUpdate.userErrors.length) {
     console.error(
-      "Metafield errors:",
+      "⚠️ Metafield save errors:",
       response.data.data.productUpdate.userErrors,
     );
   }
 }
 
-// new utility function to process items in batches with delay to respect rate limits
+// ============================================================
+// HELPER: processBatch
+// Processes products in parallel batches of `batchSize`
+// with a 500ms delay between batches to respect Shopify
+// API rate limits (prevents 429 Too Many Requests errors)
+// ============================================================
 async function processBatch(items, batchSize, handler) {
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
     await Promise.all(batch.map(handler));
+
     console.log(
-      `✅ Batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(items.length / batchSize)} done`,
+      `✅ Batch ${Math.floor(i / batchSize) + 1}` +
+        `/${Math.ceil(items.length / batchSize)} done`,
     );
-    // Delay between batches to respect Shopify rate limits
+
+    // Wait between batches (not after the last one)
     if (i + batchSize < items.length) {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }

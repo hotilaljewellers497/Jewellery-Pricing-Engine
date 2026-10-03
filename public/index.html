@@ -132,6 +132,14 @@
         required
       /><br /><br />
 
+      <label>Silver Rate (per gram) — Bars & Coins:</label><br />
+      <input
+        type="number"
+        id="silverBullionRate"
+        name="silverBullionRate"
+        required
+      /><br /><br />
+
       <!-- DIAMOND -->
       <div class="section-label">💎 Diamond Rates</div>
 
@@ -215,11 +223,12 @@
           goldRate18K: document.getElementById("goldRate18K").value,
           goldRate14K: document.getElementById("goldRate14K").value,
           silverRate: document.getElementById("silverRate").value,
+          silverBullionRate:  document.getElementById("silverBullionRate").value,  // ✅ NEW
           igiDiamondRate: document.getElementById("igiDiamondRate").value,
           giaDiamondRate: document.getElementById("giaDiamondRate").value,
           hrdDiamondRate: document.getElementById("hrdDiamondRate").value,
           huid: document.getElementById("huid").value,
-          diamondCertCharge: document.getElementById("diamondCertCharge").value,  // ✅ NEW
+          diamondCertCharge: document.getElementById("diamondCertCharge").value, // ✅ NEW
         };
 
         try {
