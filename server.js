@@ -38,6 +38,54 @@ app.listen(PORT, () => {
 
 const SHOPIFY_URL = `https://${process.env.SHOPIFY_STORE}/admin/api/2026-07/graphql.json`;
 
+let cachedShopifyToken = null;
+let shopifyTokenExpiresAt = 0;
+
+async function getShopifyAccessToken() {
+  if (
+    cachedShopifyToken &&
+    Date.now() < shopifyTokenExpiresAt
+  ) {
+    return cachedShopifyToken;
+  }
+
+  const shop = process.env.SHOPIFY_STORE;
+  const clientId = process.env.SHOPIFY_CLIENT_ID;
+  const clientSecret = process.env.SHOPIFY_CLIENT_SECRET;
+
+  if (!shop || !clientId || !clientSecret) {
+    throw new Error(
+      "Missing Shopify environment variables. Check Render settings."
+    );
+  }
+
+  const response = await axios.post(
+    `https://${shop}/admin/oauth/access_token`,
+    new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: clientId,
+      client_secret: clientSecret,
+    }).toString(),
+    {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    }
+  );
+
+  if (!response.data.access_token) {
+    throw new Error("Shopify access token was not returned.");
+  }
+
+  cachedShopifyToken = response.data.access_token;
+
+  const expiresIn = Number(response.data.expires_in || 86399);
+  shopifyTokenExpiresAt =
+    Date.now() + Math.max(60, expiresIn - 300) * 1000;
+
+  return cachedShopifyToken;
+}
+
 // ============================================================
 // PROGRESS TRACKER — used by frontend polling
 // ============================================================
@@ -384,7 +432,7 @@ async function fetchAllProducts() {
       { query },
       {
         headers: {
-          "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
+          "X-Shopify-Access-Token": await getShopifyAccessToken(),
           "Content-Type": "application/json",
         },
       },
