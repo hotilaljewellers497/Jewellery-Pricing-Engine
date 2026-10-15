@@ -485,7 +485,7 @@ async function updateVariantPrice(productId, variants) {
     { query: mutation, variables },
     {
       headers: {
-        "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
+        "X-Shopify-Access-Token": await getShopifyAccessToken(),
         "Content-Type": "application/json",
       },
     },
@@ -535,7 +535,7 @@ async function saveBreakdownMetafields(productId, breakdown) {
     { query: mutation, variables },
     {
       headers: {
-        "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
+        "X-Shopify-Access-Token": wait getShopifyAccessToken(),
         "Content-Type": "application/json",
       },
     },
