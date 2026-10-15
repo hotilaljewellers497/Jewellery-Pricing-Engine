@@ -535,7 +535,7 @@ async function saveBreakdownMetafields(productId, breakdown) {
     { query: mutation, variables },
     {
       headers: {
-        "X-Shopify-Access-Token": wait getShopifyAccessToken(),
+        "X-Shopify-Access-Token": await getShopifyAccessToken(),
         "Content-Type": "application/json",
       },
     },
